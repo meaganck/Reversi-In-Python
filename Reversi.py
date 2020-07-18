@@ -28,13 +28,10 @@ def findOpponent(playerColour):
         """Finds and returns colour of opponent"""
 
         if playerColour == "W":
-               opponent = "B"
+               return "B"
         elif playerColour == "B":
-                opponent = "W"
-        else:
-                print ("Invalid colour")
-                opponent = "Z"
-        return opponent
+                return "W"
+
 
 
 def positionInBounds(n, row, col):
@@ -50,7 +47,7 @@ def legalDirection(board, n, row, col, colour, deltaRow, deltaCol):
 
          # checks if deltaRow == deltaCol == 0, which is an invalid direction
         if (deltaRow == 0) and (deltaCol == 0):
-                print("Failed deltaRow and col == 0")
+               # print("Failed deltaRow and col == 0")
                 return False
 
         opponent = findOpponent(colour)
@@ -58,8 +55,8 @@ def legalDirection(board, n, row, col, colour, deltaRow, deltaCol):
         currentCol = col + deltaCol
 
     # move must have a valid positon on the board and opponent has to be adjacent
-        if (not positionInBounds(n, currentRow, currentCol)) or board[currentRow][currentCol] != opponent:
-                print("Failed 2nd condition")
+        if (not positionInBounds(n, currentRow, currentCol)) or (board[currentRow][currentCol] != opponent):
+                #print("Failed 2nd condition")
                 return False
         else:
                 currentRow += deltaRow
@@ -71,12 +68,12 @@ def legalDirection(board, n, row, col, colour, deltaRow, deltaCol):
 
                 # if it hits its own colour, then found a valid move
                 if tile == colour:
-                        print("Passed: legal move")
+                        #print("Passed: legal move")
                         return True
 
                 #no move if there's an empty spot
                 elif tile == 'U':
-                        print("Failed 3rd condition")
+                        #print("Failed 3rd condition")
                         return False
 
                 # keeps on checkint if opponent is the tile
@@ -85,7 +82,7 @@ def legalDirection(board, n, row, col, colour, deltaRow, deltaCol):
                         currentCol += deltaCol
 
 
-        print("Failed default")
+        #print("Failed default")
         return False # found no move
 
 
@@ -267,10 +264,10 @@ def compTurn(board, n, colour):
                                 for deltaRow in range(-1, 2):
                                         for deltaCol in range(-1, 2):
                                                 # if there is a legal move, finds score
-                                                print("TEST")
+                                                #print("TEST")
                                                 if legalDirection(board, n, row, col, colour, deltaRow, deltaCol):
                                                         newScore = calcScore(board, n, row, col, colour)
-                                                        print("newScore: ", newScore)
+                                                        #print("newScore: ", newScore)
 
                                                         # compares current score with exisiting score
                                                         if newScore > highScore:
@@ -278,8 +275,8 @@ def compTurn(board, n, colour):
                                                                 bestRow = row
                                                                 bestCol = col
                                                                 highScore = newScore
-                coord = [bestRow , bestCol]
-                return coord
+        coord = [bestRow , bestCol]
+        return coord
 
 
 
@@ -290,6 +287,7 @@ MAX = 26
 LETTERS = ['*','a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z']
 
 # variables
+validColour = False
 playing = True
 numTurns = 0
 currentColour = 'W' # black plays first, when start of game changes colour
@@ -300,8 +298,16 @@ compPlay = True
 # gets dimension of board from user
 n = input("Enter dimension of board: ")
 
-# user selects what colour the computer plays
-compColour = raw_input("Computer plays (B/W): ")
+# checks if the user enters a valid colour
+while not validColour:
+    # user selects what colour the computer plays
+    compColour = raw_input("Computer plays (B/W): ")
+
+    if (compColour == 'B') or (compColour == 'W'):
+        validColour = True
+    else:
+        print("Please select 'B' or 'W'")
+        print(" ") # for newline
 
 # determine colour of user using findOpponent
 userColour = findOpponent(compColour) # make a check to see if user gave a valid colour
@@ -331,7 +337,10 @@ printBoard(board, n)
 while playing:
         numTurns +=1
 
-         # add validation to check if end of game!!
+         # validation to check if end of game
+        if (colourGoneOrBoardFull(board, n)) or (not userPlay and not compPlay):
+            playing = False
+            continue
 
         #determines whose turn it is
         if currentColour == 'W':
@@ -342,18 +351,20 @@ while playing:
         # computer's turn
         if compColour == currentColour:
                 move = compTurn(board, n, compColour)
-                print(move)
+                #print(move) # debug
 
                 # if there is a move
                 if move[0] != -1:
 
-                         # might work?
-                        outputRow = letters[move[0]]
-                        outputCol = letters[move[1]]
+                        # outputs the computer's move
+                        outputRow = LETTERS[move[0]]
+                        outputCol = LETTERS[move[1]]
                         print("Computer places ", compColour, " at ", outputRow, outputCol)
+                        print(" ") # newline
                         playMove(board, n, move[0], move[1], compColour)
                         compPlay = True
                         printBoard(board, n)
+                        
                 # no move
                 else:
                         if userPlay:
@@ -374,12 +385,13 @@ while playing:
                         userPlay = True
                         userRow= raw_input("Enter a row: ")
                         userCol= raw_input("Enter a col for: ")
+                        print(" ") # newline
 
                         # convert to int
                         userRowNum = LETTERS.index(userRow)
                         userColNum = LETTERS.index(userCol)
 
-                        print("You chose: row: ", userRowNum, "and col: ", userColNum)
+                        #print("You chose: row: ", userRowNum, "and col: ", userColNum) #debug
 
                         # if valid move
                         if userTurn(board, n, userColour, userRowNum, userColNum):
@@ -397,11 +409,14 @@ while playing:
 
 
 # end of game
+# if the user did not play a valid move, the default winner is the user
+# if this didn't happen, then finds the winner
 if not winnerFound:
-        pass
+        winner = calcWinner(board, n)
 
+# outputs the winner
 if winner == 'T':
         print("Draw!")
 else:
-        print("X player wins.")
+        print(winner, " player wins.")
 
